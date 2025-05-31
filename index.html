@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disappointment Sort</title>
+    <meta name="description" content="A sorting algorithm I came up with. It's not good at being a sorting algorithm.">
+    <meta name="author" content="Lopolin">
+    <style>
+        :root {
+            --bg: #000;
+            --text: #fff;
+        }
+        html {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #log, #output {
+            font-family: monospace;
+        }
+        #log {
+            white-space-collapse: preserve;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+    </style>
+    <script>
+        class log {
+            async log(indent, level, ...msg) {
+                if (this.level > level) return;
+                const entry = document.createElement("div");
+                entry.innerText = "    ".repeat(indent) + msg.join(" ");
+                this.parent.append(entry);
+            }
+            async logstart(indent, level, ...msg) {
+                if (this.level > level) return;
+                const entry = document.createElement("div");
+                entry.innerText = "    ".repeat(indent) + msg.join(" ");
+                this.parent.prepend(entry);
+            }
+            async end() {
+                const entry = document.createElement("hr");
+                this.parent.append(entry);
+            }
+            constructor(loglevel=0) {
+                this.level = loglevel;
+                const parent = document.createElement("div");
+                this.parent = parent;
+                document.getElementById("log").append(parent);
+            }
+        }
+        function DisappointmentSort(input, timeonly) {
+            const logger = new log(timeonly ? 1 : 0);
+            // Now here's the real deal
+            function internal(input, indent=0) {
+                const log = (...msg) => {logger.log(indent, 0, ...msg)};
+                log("Input:", input);
+                // Shortest bubble sort
+                switch (input.length) {
+                    case 0:
+                        return input;
+                        break;
+                    case 1:
+                        return input;
+                        break;
+                    case 2:
+                        if (input[0] > input[1]) {
+                            return [input[1], input[0]];
+                        }
+                        return input;
+                        break;
+                    default:
+                        break;
+                }
+                const correct = [input[0]];
+                const rawqueue = [];
+                let currenthighest = correct[0];
+                // Split between is in order and isn't
+                for (let i = 1; i < input.length; i++) {
+                    const now = input[i];
+                    if (now < currenthighest) {
+                        rawqueue.push(now);
+                    } else {
+                        correct.push(now);
+                        currenthighest = now;
+                    }
+                }
+                // If everything is correct, return it!
+                if (rawqueue.length === 0) {
+                    return correct;
+                }
+                log("Correct:", correct);
+                log("Raw queue:", rawqueue);
+                const queue = internal(rawqueue, indent+1);
+                log("Clean queue:", queue);
+                // If not, insert the sorted queue into the input
+                let inqueue = queue.shift();
+                const out = [];
+                for (let i = 0; i < correct.length; i++) {
+                    const now = correct[i];
+                    if (inqueue < now) {
+                        out.push(inqueue);
+                        inqueue = queue.shift();
+                        i--;
+                    } else {
+                        out.push(now);
+                    }
+                }
+                log("Output:", out);
+                return out;
+            }
+            // And execute.
+            const output = [];
+            const start = performance.now();
+            input.forEach(chunk => {
+                output.push(internal(chunk));
+            });
+            const end = performance.now();
+            logger.logstart(0, 1, "Time:", end - start);
+            logger.end();
+            return output;
+        }
+        function BuiltInSort(input, timeonly) {
+            const logger = new log(timeonly ? 1 : 0);
+            function internal(input) {
+                const log = (...msg) => {logger.log(0, 0, ...msg)};
+                log("Input:", input);
+                const sorted = input.toSorted((a, b) => a - b);
+                log("Output:", sorted);
+                return sorted;
+            }
+            const output = [];
+            const start = performance.now();
+            input.forEach(chunk => {
+                output.push(internal(chunk));
+            });
+            const end = performance.now();
+            logger.logstart(0, 1, "Time:", end - start);
+            logger.end();
+            return output;
+        }
+        window.addEventListener("load", () => {
+            document.getElementById("theform").addEventListener("submit", e => {
+                e.preventDefault();
+                const amount = document.getElementById("amount").valueAsNumber;
+                const iterations = document.getElementById("iterations").valueAsNumber;
+                const maxnum = document.getElementById("maxnum").valueAsNumber;
+                const timeonly = document.getElementById("timeonly").checked;
+                const builtin = document.getElementById("builtin").checked;
+                const input = new Array(iterations).fill(null).map(() => {
+                    return new Array(amount).fill(null).map(() => Math.round(Math.random() * maxnum));
+                });
+                let sorted;
+                if (builtin) {
+                    sorted = BuiltInSort(input, timeonly);
+                } else {
+                    sorted = DisappointmentSort(input, timeonly);
+                }
+                if (!timeonly) {
+                    document.getElementById("output").innerText = sorted.map(chunk => chunk.join(", ")).join("\n");
+                } else {
+                    document.getElementById("output").innerText = "";
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <form action="" id="theform">
+        <label for="amount">Amount of numbers</label>
+        <input required type="number" name="amount" id="amount">
+        <label for="iterations">Amount of iterations</label>
+        <input required type="number" name="iterations" id="iterations">
+        <label for="maxnum">Max Number</label>
+        <input required type="number" name="maxnum" id="maxnum">
+        <label for="timeonly">Only time?</label>
+        <input type="checkbox" name="timeonly" id="timeonly">
+        <label for="builtin">Use built in sorting (for comparison)</label>
+        <input type="checkbox" name="builtin" id="builtin">
+        <input type="submit" value="Run">
+    </form>
+    <div>
+        <span>Output: </span>
+        <div id="output"></div>
+    </div>
+    <hr>
+    <div id="log"></div>
+</body>
+</html>
