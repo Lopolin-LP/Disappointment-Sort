@@ -39,9 +39,9 @@ This gets us
 9 | 9
 
 ### Level 3
-Now let's do the shorted bubble sort in history, and compare if the second number is bigger than the first. If so, return them reversed, otherwise keep as is.
+Now let's do the shortest bubble sort in history, and compare if the second number is bigger than the first. If so, return them reversed, otherwise keep as is.
 
-We return as is.
+In this example, we return as is.
 
 ### Level 2B
 Now we insert the sorted queue back into our array. We can do this by going over each number and checking if the current number in queue is smaller than the one we're at. If so, we insert the number and check it again, but with the next in queue. If not, we go to the next number in the array.
